@@ -1,0 +1,120 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+jobs:
+  staging-job:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:10.13.0
+        environment:
+          NODE_OPTIONS: --max-old-space_size=8024
+        resource_class: large
+    # working directory
+    working_directory: ~/repo
+    # steps to perform
+    
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-all-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-all-dependencies-
+        
+      # let's install npm
+      - run: 
+          name: Install Node modules in All services
+          command: npm install --silent
+      
+      # ng build  --staging
+      - run: 
+          name: Building Token App
+          command: npm run build --silent
+          
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-all-dependencies-{{ checksum "package.json" }}
+
+      - add_ssh_keys:
+          fingerprints:
+            - "8e:8f:9b:c2:ca:50:b7:ec:b6:fb:35:d5:03:4d:1a:18"
+
+      - run:
+          name: Deploying Token App
+          command: scp -o StrictHostKeyChecking=no -r ./dist $DROPLET_USER@$DROPLET_IP://home/app
+      - run:
+          name: Restarting Server
+          command: ssh -o StrictHostKeyChecking=no -v $DROPLET_USER@$DROPLET_IP "cd /home/app/ && yarn install && pm2 restart all"
+
+  prod-job:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:10.13.0
+        environment:
+          NODE_OPTIONS: --max-old-space_size=8024
+        resource_class: large
+    # working directory
+    working_directory: ~/repo
+    # steps to perform
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-all-prod-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-all-prod-dependencies-
+        
+      # let's install npm
+      - run: 
+          name: Install Node modules in All services
+          command: npm install --silent
+      
+      # ng build  --staging
+      - run: 
+          name: Building Micro Services
+          command: npm run build --silent
+          
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-all-prod-dependencies-{{ checksum "package.json" }}
+
+      - add_ssh_keys:
+          fingerprints:
+            - "8e:8f:9b:c2:ca:50:b7:ec:b6:fb:35:d5:03:4d:1a:18"
+
+      # Sorting Artist Service
+      - run:
+          name: Stopping Production Services
+          command: ssh -o StrictHostKeyChecking=no -v $DROPLET_USER@$DROPLET_IP "cd /home/prod && rm -rf dist"
+      - run:
+          name: Deploying All Token Services to Production
+          command: scp -o StrictHostKeyChecking=no -r ./dist $DROPLET_USER@$DROPLET_IP://home/prod
+      - run:
+          name: Restarting Production App
+          command: ssh -o StrictHostKeyChecking=no -v $DROPLET_USER@$DROPLET_IP "cd /home/app && npm install && pm2 restart all"
+    
+workflows:  
+  version: 2
+  build-deploy:
+    jobs:
+      - staging-job:
+          filters:
+            branches:
+              only: develop
+      - approve-prod-deploy:
+          type: approval
+          filters:
+            branches:
+              only: production
+      - prod-job:
+          requires:
+            - approve-prod-deploy
+          filters:
+            branches:
+              only: production

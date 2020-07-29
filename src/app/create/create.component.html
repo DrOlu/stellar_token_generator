@@ -1,0 +1,119 @@
+<app-header></app-header>
+
+<main>
+  <section class="">
+    <div class="main-wrap wrapper-y will-grow d-flx flex-dir-col al-i-fs j-c-c wrapper-x mx-auto">
+      <div class="w-100 mt-2">
+        <div class="py-2 mb-2">
+          <h2 class="">Create Asset</h2>
+          <p class="maxwidth-tb">Issuing and Distribution accounts must be active with a minimum balance of  40XLM</p>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="grid is-multi-col mostly-2">
+            <div>
+              <div class="pb-2 d-flx">
+                <div class="prefix is-wider">
+                  <label for="test">Test</label>
+                  <input type="radio" id="test" name="networkType" value="1" formControlName="networkType">
+                </div>
+                <div class="suffix is-wider">
+                  <label for="public">Public</label>
+                  <input type="radio" id="public" name="networkType" value="2" formControlName="networkType">
+                </div><p></p>
+                <div *ngIf="submitted && f.networkType.errors" class="suffix is-wider invalid-feedback">
+                  <div *ngIf="f.networkType.errors.required">* Network Type is required</div>
+                </div>
+              </div>
+              <div class="input-field">
+                <label for="">Issuer Secret Key</label>
+                <input type="text" [ngClass]="{ 'is-invalid': submitted && f.issuerSecret.errors }" formControlName="issuerSecret">
+                <div *ngIf="submitted && f.issuerSecret.errors" class="invalid-feedback">
+                  <div *ngIf="f.issuerSecret.errors.required">* Issuer Secret is required</div>
+                </div>
+              </div>
+              <div class="input-field">
+                <label for="">Distributor Secret Key</label>
+                <input type="text" [ngClass]="{ 'is-invalid': submitted && f.distSecret.errors }" formControlName="distSecret">
+                <div *ngIf="submitted && f.distSecret.errors" class="invalid-feedback">
+                  <div *ngIf="f.distSecret.errors.required">* Distributor Secret is required</div>
+                </div>
+              </div>
+              <div class="input-field">
+                <label for="">Asset Code</label>
+                <input type="text" [ngClass]="{ 'is-invalid': submitted && f.assetCode.errors }" formControlName="assetCode">
+                <div *ngIf="submitted && f.assetCode.errors" class="invalid-feedback">
+                  <div *ngIf="f.assetCode.errors.required">* Asset Code is required</div>
+                </div>
+              </div>
+              <div class="input-field">
+                <label for="">Amount</label>
+                <input type="number" step="0.0000001" [ngClass]="{ 'is-invalid': submitted && f.amount.errors }" formControlName="amount">
+                <div *ngIf="submitted && f.amount.errors" class="invalid-feedback">
+                  <div *ngIf="f.amount.errors.required">* Amount is required</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class=" mb-1">
+                <label for="require-auth" class="pb-1">Require Authorization</label>
+                <br>
+                <input type="checkbox" name="require-auth" formControlName="requireAuth">
+                <br>
+                <p class="microtext">This requires the issuing account to give other accounts permission before they can hold the issuing account credit.</p>
+              </div>
+              <hr>
+              <div class=" mb-1">
+                <label for="revokable" class="pb-1">Revokable Authorization</label>
+                <br>
+                <input type="checkbox" name="revokable" formControlName="revokeAuth">
+                <br>
+                <p class="microtext">Allows the issuing account to revoke its credit held by other accounts</p>
+              </div>
+              <hr>
+              <div class=" mb-1">
+                <label for="stop-token-creation" class="pb-1">Stop Token Creation</label>
+                <br>
+                <input type="checkbox" name="stop-token-creation" formControlName="lockAccount" >
+                <br>
+                <p class="microtext">No further tokens can be created after now.</p>
+              </div>
+              <hr>
+              <div class=" mb-1">
+                <label for="distribute" class="pb-1">Distribute on Stellar Decentralised Exchange</label>
+                <br>
+                <input type="checkbox" name="distribute" formControlName="distType" >
+                <br>
+              </div>
+              <div class="row" *ngIf="isDEX(f.distType.value)">
+                <div class="col-122 form-group">
+                    <div class="input-field">
+                      <label>Amount to sell</label>
+                      <input class="form-control" type="number" name="distAmount" formControlName="distAmount" step="0.0000001" required/>
+                    </div>
+                    <span class="help-block text-info">Amount of assets to distribute</span>
+                </div>
+    
+                <div class="col-12 form-group">
+                  <div class="input-field">
+                    <label>Price per Asset</label>
+                      <input class="form-control" type="number" name="distPrice" formControlName="distPrice" step="0.0000001" required/>
+                    </div>
+                    <span class="help-block text-info">Price of {{f.assetCode.value || 'Asset' }} to XLM:  
+                      1{{f.assetCode.value || 'Asset' }} = {{f.distPrice.value || '1.00' }}XLM</span>
+                </div>
+              </div>              
+            </div>
+          </div>
+          <hr>
+          <div class="button-area py-1">
+            <button type="submit" [disabled]="loading">
+              <span *ngIf="loading" style="vertical-align: middle;" class="mr-1"><fa-icon [icon]="faSpinner" [pulse]="true"></fa-icon></span>{{loading? 'Creating...':' Create Asset'}} 
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<app-footer></app-footer>
