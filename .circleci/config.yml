@@ -77,7 +77,7 @@ jobs:
       # ng build  --staging
       - run: 
           name: Building Micro Services
-          command: npm run build --silent
+          command: npm run build:prod --silent
           
       - save_cache:
           paths:
