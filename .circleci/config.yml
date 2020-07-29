@@ -27,7 +27,7 @@ jobs:
       # let's install npm
       - run: 
           name: Install Node modules in All services
-          command: npm install
+          command: npm install --silent
       
       # ng build  --staging
       - run: 
